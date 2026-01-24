@@ -11,7 +11,7 @@ import { LeaveRequest, User } from '@/types';
 import { cn } from '@/lib/utils';
 
 export default function WardenPage() {
-    const [requests, setRequests] = useState<(LeaveRequest & { users: User })[]>([]);
+    const [requests, setRequests] = useState<(LeaveRequest & { users: User; assigned_warden?: User })[]>([]);
     const [selectedIds, setSelectedIds] = useState<(string | number)[]>([]); // ResponsiveTable uses string|number
     const [filterStatus, setFilterStatus] = useState<'All' | 'Pending' | 'Approved'>('Pending'); // Default to Pending for efficiency
     const [searchQuery, setSearchQuery] = useState('');
