@@ -28,11 +28,16 @@ export default function DigitalPassPage() {
     }, [id]);
 
     const fetchPass = async () => {
-        const { data } = await supabase
+        const { data, error } = await supabase
             .from('leave_requests')
-            .select('*, users!inner(*)')
+            .select('*, users(*)')
             .eq('id', id)
             .single();
+
+        if (error) {
+            console.error('Error fetching pass:', error);
+        }
+
         if (data) setRequest(data as any);
         setLoading(false);
     };
