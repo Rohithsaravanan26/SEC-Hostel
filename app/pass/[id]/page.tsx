@@ -118,9 +118,13 @@ export default function DigitalPassPage() {
                                     CHECK OUT <ArrowRight className="w-5 h-5" />
                                 </button>
                             ) : (
-                                <div className="bg-emerald-50 border border-emerald-100 p-3 rounded-lg text-center mb-2">
-                                    <p className="text-xs text-emerald-600 uppercase font-bold">Checked Out At</p>
-                                    <p className="text-emerald-900 font-mono">{format(new Date(request.actual_out_time), 'h:mm a')}</p>
+                                <div className="bg-gradient-to-r from-emerald-50 to-emerald-100 border-2 border-emerald-200 p-4 rounded-xl mb-2">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+                                        <p className="text-xs text-emerald-700 uppercase font-bold tracking-wide">Checked Out</p>
+                                    </div>
+                                    <p className="text-emerald-900 font-bold text-lg">{format(new Date(request.actual_out_time), 'MMM d, yyyy')}</p>
+                                    <p className="text-emerald-700 font-mono text-2xl">{format(new Date(request.actual_out_time), 'h:mm a')}</p>
                                 </div>
                             )}
 
@@ -134,9 +138,13 @@ export default function DigitalPassPage() {
                             )}
 
                             {request.actual_in_time && (
-                                <div className="bg-slate-100 border border-slate-200 p-4 rounded-xl text-center">
-                                    <p className="font-bold text-slate-500">Pass Closed</p>
-                                    <p className="text-xs text-slate-400 mt-1">Returned at {format(new Date(request.actual_in_time), 'h:mm a')}</p>
+                                <div className="bg-gradient-to-r from-slate-100 to-slate-200 border-2 border-slate-300 p-4 rounded-xl">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <div className="w-2 h-2 bg-slate-500 rounded-full"></div>
+                                        <p className="text-xs text-slate-600 uppercase font-bold tracking-wide">Pass Closed - Returned</p>
+                                    </div>
+                                    <p className="text-slate-900 font-bold text-lg">{format(new Date(request.actual_in_time), 'MMM d, yyyy')}</p>
+                                    <p className="text-slate-700 font-mono text-2xl">{format(new Date(request.actual_in_time), 'h:mm a')}</p>
                                 </div>
                             )}
 
