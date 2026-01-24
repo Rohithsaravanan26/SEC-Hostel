@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase';
-import { useParams } from 'next/navigation'; // Correct hook for app router
+import { useParams, useRouter } from 'next/navigation'; // Correct hook for app router
 import { format } from 'date-fns';
 import { Loader2, ArrowRight, ArrowLeft } from 'lucide-react';
 import { LeaveRequest, User } from '@/types';
@@ -11,6 +11,7 @@ import { cn } from '@/lib/utils';
 
 export default function DigitalPassPage() {
     const { id } = useParams();
+    const router = useRouter();
     const [request, setRequest] = useState<LeaveRequest & { users: User } | null>(null);
     const [loading, setLoading] = useState(true);
     const [time, setTime] = useState(new Date());
@@ -133,6 +134,14 @@ export default function DigitalPassPage() {
                                     <p className="text-xs text-slate-400 mt-1">Returned at {format(new Date(request.actual_in_time), 'h:mm a')}</p>
                                 </div>
                             )}
+
+                            {/* Close button */}
+                            <button
+                                onClick={() => router.back()}
+                                className="w-full py-3 bg-slate-100 text-slate-700 rounded-xl font-semibold hover:bg-slate-200 active:scale-95 transition-all border border-slate-200 mt-2"
+                            >
+                                Close
+                            </button>
                         </div>
                     )}
                 </div>

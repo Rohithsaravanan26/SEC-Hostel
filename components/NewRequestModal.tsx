@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase';
 import { uploadFile } from '@/lib/storage';
 import { Loader2, Upload, X } from 'lucide-react';
@@ -20,7 +20,29 @@ export function NewRequestModal({ isOpen, onClose, userId }: NewRequestModalProp
     const [inDate, setInDate] = useState('');
     const [file, setFile] = useState<File | null>(null);
     const [loading, setLoading] = useState(false);
+    const [wardens, setWardens] = useState<any[]>([]);
+    const [selectedWardenId, setSelectedWardenId] = useState('');
     const router = useRouter();
+    const supabase = createClient();
+
+    // Fetch wardens when modal opens
+    useEffect(() => {
+        if (isOpen) {
+            fetchWardens();
+        }
+    }, [isOpen]);
+
+    const fetchWardens = async () => {
+        const { data, error } = await supabase
+            .from('users')
+            .select('id, full_name, hostel_block')
+            .eq('role', 'warden')
+            .order('full_name');
+
+        if (data && !error) {
+            setWardens(data);
+        }
+    };
 
     if (!isOpen) return null;
 
@@ -29,33 +51,85 @@ export function NewRequestModal({ isOpen, onClose, userId }: NewRequestModalProp
         setLoading(true);
 
         try {
-            let documentUrl = null;
-            if (file) {
-                documentUrl = await uploadFile(file);
-            } else {
+            // Validate file first
+            if (!file) {
                 alert("Please upload a supporting document.");
                 setLoading(false);
                 return;
             }
 
-            const supabase = createClient();
-            const { error } = await supabase.from('leave_requests').insert({
+            // Validate warden selection
+            if (!selectedWardenId) {
+                alert("Please select a warden to assign this request.");
+                setLoading(false);
+                return;
+            }
+
+            console.log('Starting file upload...', { fileName: file.name, fileSize: file.size });
+
+            // Upload file
+            const documentUrl = await uploadFile(file);
+
+            if (!documentUrl) {
+                console.error('File upload failed: No URL returned');
+                alert('Failed to upload document. Please check if the storage bucket "leave_docs" exists in Supabase.');
+                setLoading(false);
+                return;
+            }
+
+            console.log('File uploaded successfully:', documentUrl);
+
+            // Convert dates to ISO format
+            const outDateISO = new Date(outDate).toISOString();
+            const inDateISO = new Date(inDate).toISOString();
+
+            console.log('Preparing database insert...', {
                 student_id: userId,
                 type,
                 reason,
-                out_date: new Date(outDate).toISOString(),
-                in_date: new Date(inDate).toISOString(),
-                status: 'Pending',
-                document_url: documentUrl,
+                out_date: outDateISO,
+                in_date: inDateISO,
+                document_url: documentUrl
             });
 
-            if (error) throw error;
+            const supabase = createClient();
+            const { data, error } = await supabase.from('leave_requests').insert({
+                student_id: userId,
+                type,
+                reason,
+                out_date: outDateISO,
+                in_date: inDateISO,
+                status: 'Pending',
+                document_url: documentUrl,
+                assigned_warden_id: selectedWardenId,
+            }).select();
 
+            if (error) {
+                console.error('Database insert error:', error);
+                throw error;
+            }
+
+            console.log('Request created successfully:', data);
+            alert('Request submitted successfully!');
             router.refresh();
             onClose();
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error creating request:', error);
-            alert('Failed to create request');
+
+            // Provide specific error messages
+            let errorMessage = 'Failed to create request.';
+
+            if (error?.message?.includes('bucket')) {
+                errorMessage += ' Storage bucket issue detected. Please ensure "leave_docs" bucket exists.';
+            } else if (error?.code === '23503') {
+                errorMessage += ' User validation failed. Please try logging out and back in.';
+            } else if (error?.code === '42501') {
+                errorMessage += ' Permission denied. Please check database policies.';
+            } else if (error?.message) {
+                errorMessage += ` Error: ${error.message}`;
+            }
+
+            alert(errorMessage);
         } finally {
             setLoading(false);
         }
@@ -98,6 +172,26 @@ export function NewRequestModal({ isOpen, onClose, userId }: NewRequestModalProp
                                 <span className="text-sm text-slate-600">Leave</span>
                             </label>
                         </div>
+                    </div>
+
+                    <div className="space-y-1">
+                        <label className="text-sm font-medium text-slate-700">
+                            Assign to Warden <span className="text-rose-500">*</span>
+                        </label>
+                        <select
+                            required
+                            value={selectedWardenId}
+                            onChange={(e) => setSelectedWardenId(e.target.value)}
+                            className="w-full rounded-lg border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border"
+                        >
+                            <option value="">Select your floor warden</option>
+                            {wardens.map((warden) => (
+                                <option key={warden.id} value={warden.id}>
+                                    {warden.full_name} - {warden.hostel_block || 'Admin'}
+                                </option>
+                            ))}
+                        </select>
+                        <p className="text-xs text-slate-500 mt-1">Choose the warden in charge of your floor</p>
                     </div>
 
                     <div className="space-y-1">

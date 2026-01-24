@@ -31,7 +31,7 @@ export default function WardenPage() {
 
         const { data, error } = await supabase
             .from('leave_requests')
-            .select('*, users!inner(*)')
+            .select('*, users!leave_requests_student_id_fkey(*), assigned_warden:users!leave_requests_assigned_warden_id_fkey(id, full_name, hostel_block)')
             .order('created_at', { ascending: false });
 
         if (error) {
@@ -87,6 +87,37 @@ export default function WardenPage() {
             cell: (item: LeaveRequest) => format(new Date(item.out_date), 'MMM d, h:mm a')
         },
         { header: 'Reason', accessorKey: 'reason' as const, className: 'max-w-xs truncate' },
+        {
+            header: 'Assigned Warden',
+            cell: (item: any) => (
+                <div className="text-sm">
+                    {item.assigned_warden ? (
+                        <div>
+                            <div className="font-medium text-slate-900">{item.assigned_warden.full_name}</div>
+                            <div className="text-xs text-slate-500">{item.assigned_warden.hostel_block}</div>
+                        </div>
+                    ) : (
+                        <span className="text-slate-400 text-xs">Not assigned</span>
+                    )}
+                </div>
+            )
+        },
+        {
+            header: 'Document',
+            cell: (item: any) => item.document_url ? (
+                <a
+                    href={item.document_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                    className="text-indigo-600 hover:text-indigo-800 underline text-sm font-medium"
+                >
+                    View
+                </a>
+            ) : (
+                <span className="text-slate-400 text-xs">No document</span>
+            )
+        },
         {
             header: 'Status',
             cell: (item: LeaveRequest) => <StatusPill status={item.status} />

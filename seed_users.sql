@@ -17,7 +17,7 @@ INSERT INTO public.users (id, register_number, full_name, role, hostel_block, ro
 VALUES 
     -- Warden User
     (
-        'REPLACE_WITH_WARDEN_UUID', 
+        'd6aeab91-b482-4d0a-a169-4a2a00b3dabd', 
         'W001', 
         'Chief Warden', 
         'warden', 
@@ -27,7 +27,7 @@ VALUES
     ),
     -- Student User
     (
-        'REPLACE_WITH_STUDENT_UUID', 
+        'f4497692-3d7d-464a-a351-14f40dcdde11', 
         'S101', 
         'John Doe', 
         'student', 
