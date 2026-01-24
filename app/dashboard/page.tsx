@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase';
 import { ResponsiveTable } from '@/components/ui/ResponsiveTable';
 import { StatusPill } from '@/components/ui/StatusPill';
 import { NewRequestModal } from '@/components/NewRequestModal';
-import { LogOut, Plus, ArrowRight, UserCircle } from 'lucide-react';
+import { LogOut, Plus, ArrowRight, UserCircle, LayoutDashboard } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
 import { LeaveRequest } from '@/types';
