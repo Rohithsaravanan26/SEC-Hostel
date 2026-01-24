@@ -77,7 +77,18 @@ export default function WardenPage() {
             cell: (item: any) => (
                 <div>
                     <div className="font-medium text-slate-900">{item.users?.full_name || 'Unknown'}</div>
-                    <div className="text-xs text-slate-500">{item.users?.register_number}</div>
+                    <div className="text-xs text-slate-500">
+                        {item.users?.register_number} • {item.users?.hostel_block} - {item.users?.room_number}
+                    </div>
+                    {item.users?.parent_mobile && (
+                        <a
+                            href={`tel:${item.users.parent_mobile}`}
+                            onClick={(e) => e.stopPropagation()}
+                            className="text-xs text-indigo-600 hover:text-indigo-800 font-medium flex items-center gap-1 mt-1"
+                        >
+                            📞 {item.users.parent_mobile}
+                        </a>
+                    )}
                 </div>
             )
         },
@@ -221,7 +232,18 @@ export default function WardenPage() {
                                     </div>
                                     <div>
                                         <h3 className="font-semibold text-slate-900">{item.users?.full_name}</h3>
-                                        <p className="text-xs text-slate-500">{item.users?.register_number} • {item.users?.hostel_block}</p>
+                                        <p className="text-xs text-slate-500">
+                                            {item.users?.register_number} • {item.users?.hostel_block} - {item.users?.room_number}
+                                        </p>
+                                        {item.users?.parent_mobile && (
+                                            <a
+                                                href={`tel:${item.users.parent_mobile}`}
+                                                onClick={(e) => e.stopPropagation()}
+                                                className="text-xs text-indigo-600 hover:text-indigo-800 font-medium flex items-center gap-1 mt-1"
+                                            >
+                                                📞 Call Parent: {item.users.parent_mobile}
+                                            </a>
+                                        )}
                                     </div>
                                 </div>
                                 <StatusPill status={item.status} />
