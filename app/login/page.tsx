@@ -153,8 +153,9 @@ export default function LoginPage() {
                     </div>
                     <div className="mt-6 grid grid-cols-1 gap-3">
                         <div className="text-xs text-center text-slate-500">
-                            <p>Warden: warden@sec.edu</p>
-                            <p>Student: student1@sec.edu</p>
+                            <p className="font-semibold mb-1">Test Credentials:</p>
+                            <p>Warden: warden@sec.edu / warden123</p>
+                            <p>Student: student1@sec.edu / student123</p>
                         </div>
                     </div>
 
