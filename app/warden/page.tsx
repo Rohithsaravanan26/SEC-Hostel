@@ -238,6 +238,35 @@ export default function WardenPage() {
                                         {format(new Date(item.out_date), 'MMM d')} - {format(new Date(item.in_date), 'MMM d')}
                                     </span>
                                 </div>
+                                <div className="flex justify-between">
+                                    <span className="text-slate-400">Assigned To</span>
+                                    <span className="font-medium text-right">
+                                        {item.assigned_warden ? (
+                                            <div>
+                                                <div className="text-slate-900">{item.assigned_warden.full_name}</div>
+                                                <div className="text-xs text-slate-500">{item.assigned_warden.hostel_block}</div>
+                                            </div>
+                                        ) : (
+                                            <span className="text-slate-400 text-xs">Not assigned</span>
+                                        )}
+                                    </span>
+                                </div>
+                                <div className="flex justify-between items-center">
+                                    <span className="text-slate-400">Document</span>
+                                    {item.document_url ? (
+                                        <a
+                                            href={item.document_url}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            onClick={(e) => e.stopPropagation()}
+                                            className="text-indigo-600 hover:text-indigo-800 underline font-medium"
+                                        >
+                                            View Document
+                                        </a>
+                                    ) : (
+                                        <span className="text-slate-400 text-xs">No document</span>
+                                    )}
+                                </div>
                                 <div className="pt-1">
                                     <span className="block text-slate-400 text-xs mb-1">Reason</span>
                                     <p className="leading-relaxed line-clamp-2">{item.reason}</p>
