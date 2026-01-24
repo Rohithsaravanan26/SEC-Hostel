@@ -30,7 +30,7 @@ export default function DigitalPassPage() {
     const fetchPass = async () => {
         const { data, error } = await supabase
             .from('leave_requests')
-            .select('*, users(*)')
+            .select('*, users!leave_requests_student_id_fkey(*)')
             .eq('id', id)
             .single();
 
