@@ -43,9 +43,77 @@ export default function DigitalPassPage() {
     };
 
     const updateTime = async (field: 'actual_out_time' | 'actual_in_time') => {
-        if (!id) return;
-        const now = new Date().toISOString();
-        await supabase.from('leave_requests').update({ [field]: now }).eq('id', id);
+        if (!id || !request) return;
+
+        // CRITICAL SECURITY: Verify status is Approved
+        if (request.status !== 'Approved') {
+            alert('Cannot check in/out for non-approved requests');
+            return;
+        }
+
+        const now = new Date();
+        const outDate = new Date(request.out_date);
+        const inDate = new Date(request.in_date);
+
+        // CRITICAL: Validate check-out time
+        if (field === 'actual_out_time') {
+            // Prevent double punch
+            if (request.actual_out_time) {
+                alert('Already checked out at ' + format(new Date(request.actual_out_time), 'MMM d, h:mm a'));
+                return;
+            }
+
+            // Prevent early check-out (more than 1 hour before scheduled out_date)
+            const oneHourBefore = new Date(outDate.getTime() - (60 * 60 * 1000));
+            if (now < oneHourBefore) {
+                alert(`Cannot check out before ${format(oneHourBefore, 'MMM d, h:mm a')}`);
+                return;
+            }
+
+            // Prevent late check-out (after scheduled return date)
+            if (now > inDate) {
+                alert('Cannot check out after scheduled return time. Please contact warden.');
+                return;
+            }
+        }
+
+        // CRITICAL: Validate check-in time
+        if (field === 'actual_in_time') {
+            // Must check out first
+            if (!request.actual_out_time) {
+                alert('Must check out before checking in');
+                return;
+            }
+
+            // Prevent double punch
+            if (request.actual_in_time) {
+                alert('Already checked in at ' + format(new Date(request.actual_in_time), 'MMM d, h:mm a'));
+                return;
+            }
+
+            // Must check in after check-out
+            const checkOutTime = new Date(request.actual_out_time);
+            if (now < checkOutTime) {
+                alert('Cannot check in before check-out time');
+                return;
+            }
+        }
+
+        // Perform update with additional server-side checks via RLS
+        const { error } = await supabase
+            .from('leave_requests')
+            .update({ [field]: now.toISOString() })
+            .eq('id', id)
+            .eq('status', 'Approved') // Extra server-side verification
+            .is(field, null); // Ensure field is null (prevent double-punch at DB level)
+
+        if (error) {
+            console.error('Update error:', error);
+            alert('Failed to update check-in/out time. Please try again or contact support.');
+            return;
+        }
+
+        // Refresh pass data
         fetchPass();
     };
 

@@ -33,6 +33,20 @@ export default function WardenPage() {
             return;
         }
 
+        // CRITICAL SECURITY: Verify user is actually a warden
+        const { data: currentUser, error: userError } = await supabase
+            .from('users')
+            .select('role')
+            .eq('id', session.session.user.id)
+            .single();
+
+        if (userError || !currentUser || currentUser.role !== 'warden') {
+            console.error('Unauthorized access attempt to warden panel');
+            alert('Unauthorized: You do not have warden privileges');
+            router.push('/dashboard');
+            return;
+        }
+
         const { data, error } = await supabase
             .from('leave_requests')
             .select('*, users!leave_requests_student_id_fkey(*), assigned_warden:users!leave_requests_assigned_warden_id_fkey(id, full_name, hostel_block)')

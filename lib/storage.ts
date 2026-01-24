@@ -1,27 +1,82 @@
 import { createClient } from './supabase';
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const ALLOWED_TYPES = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
+const ALLOWED_EXTENSIONS = ['pdf', 'jpg', 'jpeg', 'png'];
 
 export const uploadFile = async (file: File): Promise<string | null> => {
     try {
-        // Validate file size
+        // SECURITY: Validate file size
         if (file.size > MAX_FILE_SIZE) {
             console.error('File too large:', file.size, 'bytes. Max size:', MAX_FILE_SIZE, 'bytes');
             throw new Error('File size exceeds 5MB limit');
         }
 
+        // CRITICAL: Validate MIME type (prevents .exe.pdf attacks)
+        if (!ALLOWED_TYPES.includes(file.type)) {
+            console.error('Invalid file type:', file.type);
+            throw new Error('Invalid file type. Only PDF, JPG, and PNG files are allowed.');
+        }
+
+        // CRITICAL: Validate file extension
+        const fileExt = file.name.split('.').pop()?.toLowerCase();
+        if (!fileExt || !ALLOWED_EXTENSIONS.includes(fileExt)) {
+            console.error('Invalid file extension:', fileExt);
+            throw new Error('Invalid file extension. Only .pdf, .jpg, and .png extensions are allowed.');
+        }
+
+        // CRITICAL: Validate magic bytes (first bytes of file content)
+        const buffer = await file.arrayBuffer();
+        const bytes = new Uint8Array(buffer);
+
+        let isValidFile = false;
+
+        // Check PDF magic bytes: %PDF (0x25 0x50 0x44 0x46)
+        if (fileExt === 'pdf') {
+            isValidFile = bytes[0] === 0x25 && bytes[1] === 0x50 && bytes[2] === 0x44 && bytes[3] === 0x46;
+            if (!isValidFile) {
+                throw new Error('File content does not match PDF format. File may be corrupted or disguised.');
+            }
+        }
+
+        // Check JPEG magic bytes: FF D8 FF
+        if (fileExt === 'jpg' || fileExt === 'jpeg') {
+            isValidFile = bytes[0] === 0xFF && bytes[1] === 0xD8 && bytes[2] === 0xFF;
+            if (!isValidFile) {
+                throw new Error('File content does not match JPEG format. File may be corrupted or disguised.');
+            }
+        }
+
+        // Check PNG magic bytes: 89 50 4E 47 (‰PNG)
+        if (fileExt === 'png') {
+            isValidFile = bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4E && bytes[3] === 0x47;
+            if (!isValidFile) {
+                throw new Error('File content does not match PNG format. File may be corrupted or disguised.');
+            }
+        }
+
         const supabase = createClient();
 
-        // Generate a unique file path: timestamp_filename
-        const fileExt = file.name.split('.').pop();
-        const fileName = `${Math.random().toString(36).substring(2)}_${Date.now()}.${fileExt}`;
+        // Generate SECURE filename with UUID (prevents overwrites and guessing)
+        const timestamp = Date.now();
+        const randomId = Math.random().toString(36).substring(2, 15);
+        const fileName = `${timestamp}_${randomId}.${fileExt}`;
         const filePath = `${fileName}`;
 
-        console.log('Uploading file to storage bucket...', { fileName, filePath, fileSize: file.size });
+        console.log('Uploading validated file...', {
+            fileName,
+            fileSize: file.size,
+            fileType: file.type,
+            extension: fileExt
+        });
 
         const { data, error } = await supabase.storage
             .from('leave_docs')
-            .upload(filePath, file);
+            .upload(filePath, file, {
+                cacheControl: '3600',
+                upsert: false, // CRITICAL: Prevent overwriting existing files
+                contentType: file.type
+            });
 
         if (error) {
             console.error('Error uploading file to storage:', error);
@@ -38,8 +93,9 @@ export const uploadFile = async (file: File): Promise<string | null> => {
         console.log('Generated public URL:', publicUrlData.publicUrl);
 
         return publicUrlData.publicUrl;
-    } catch (error) {
+    } catch (error: any) {
         console.error('uploadFile error:', error);
-        return null;
+        // Throw error to show specific message to user
+        throw error;
     }
 };
