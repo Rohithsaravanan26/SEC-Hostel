@@ -1,4 +1,3 @@
-```
 export function Footer() {
     return (
         <footer className="bg-slate-50 border-t border-slate-200 mt-auto">
@@ -11,4 +10,3 @@ export function Footer() {
         </footer>
     );
 }
-```
