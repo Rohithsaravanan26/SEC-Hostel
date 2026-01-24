@@ -96,14 +96,36 @@ export default function DigitalPassPage() {
                         <p className="text-xs text-indigo-600 font-medium mt-1">{format(time, 'EEEE, MMM d, yyyy')}</p>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4 text-center">
-                        <div className="bg-slate-50 p-3 rounded-lg border border-slate-100">
-                            <p className="text-xs text-slate-400 uppercase">Out Time</p>
-                            <p className="font-semibold text-slate-900">{format(new Date(request.out_date), 'HH:mm')}</p>
+                    {/* Pass Schedule - Enhanced for Mobile */}
+                    <div className="bg-slate-50 rounded-xl p-4 space-y-3 border border-slate-100">
+                        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest text-center mb-3">Pass Schedule</h3>
+
+                        {/* Out Date & Time */}
+                        <div className="bg-white rounded-lg p-3 border border-slate-200">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                    <ArrowRight className="w-4 h-4 text-indigo-600" />
+                                    <span className="text-xs text-slate-500 uppercase font-semibold">Departure</span>
+                                </div>
+                                <div className="text-right">
+                                    <p className="text-sm font-bold text-slate-900">{format(new Date(request.out_date), 'MMM d, yyyy')}</p>
+                                    <p className="text-lg font-mono font-bold text-indigo-600">{format(new Date(request.out_date), 'h:mm a')}</p>
+                                </div>
+                            </div>
                         </div>
-                        <div className="bg-slate-50 p-3 rounded-lg border border-slate-100">
-                            <p className="text-xs text-slate-400 uppercase">In Time</p>
-                            <p className="font-semibold text-slate-900">{format(new Date(request.in_date), 'HH:mm')}</p>
+
+                        {/* In Date & Time */}
+                        <div className="bg-white rounded-lg p-3 border border-slate-200">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                    <ArrowLeft className="w-4 h-4 text-emerald-600" />
+                                    <span className="text-xs text-slate-500 uppercase font-semibold">Return</span>
+                                </div>
+                                <div className="text-right">
+                                    <p className="text-sm font-bold text-slate-900">{format(new Date(request.in_date), 'MMM d, yyyy')}</p>
+                                    <p className="text-lg font-mono font-bold text-emerald-600">{format(new Date(request.in_date), 'h:mm a')}</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
