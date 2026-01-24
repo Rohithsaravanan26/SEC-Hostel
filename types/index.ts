@@ -9,7 +9,11 @@ export interface User {
   role: Role;
   hostel_block: string | null;
   room_number: string | null;
+  course: string | null;
+  student_mobile: string | null;
   parent_mobile: string | null;
+  blood_group: string | null;
+  address: string | null;
   profile_pic_url?: string | null;
   created_at: string;
 }

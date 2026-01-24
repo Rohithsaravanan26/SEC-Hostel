@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase';
 import { ResponsiveTable } from '@/components/ui/ResponsiveTable';
 import { StatusPill } from '@/components/ui/StatusPill';
 import { NewRequestModal } from '@/components/NewRequestModal';
-import { Plus, LayoutDashboard, LogOut } from 'lucide-react';
+import { LogOut, Plus, ArrowRight, UserCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
 import { LeaveRequest } from '@/types';
@@ -85,6 +85,13 @@ export default function DashboardPage() {
                             <div className="h-9 w-9 bg-indigo-100 rounded-full flex items-center justify-center border border-indigo-200 text-indigo-700 font-bold">
                                 {user?.email?.charAt(0).toUpperCase()}
                             </div>
+                            <button
+                                onClick={() => router.push('/profile')}
+                                className="p-2 text-slate-400 hover:text-slate-600 transition-colors"
+                                title="View Profile"
+                            >
+                                <UserCircle className="w-5 h-5" />
+                            </button>
                             <button onClick={handleLogout} className="p-2 text-slate-400 hover:text-slate-600 transition-colors">
                                 <LogOut className="w-5 h-5" />
                             </button>
