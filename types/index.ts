@@ -29,5 +29,6 @@ export interface LeaveRequest {
   document_url: string | null;
   actual_out_time: string | null;
   actual_in_time: string | null;
+  rejection_reason: string | null;
   created_at: string;
 }

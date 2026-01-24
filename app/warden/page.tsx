@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase';
 import { ResponsiveTable } from '@/components/ui/ResponsiveTable';
 import { StatusPill } from '@/components/ui/StatusPill';
+import { RejectModal } from '@/components/RejectModal';
 import { CheckCircle, XCircle, LogOut, ShieldCheck, Search, Filter } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
@@ -15,6 +16,8 @@ export default function WardenPage() {
     const [selectedIds, setSelectedIds] = useState<(string | number)[]>([]); // ResponsiveTable uses string|number
     const [filterStatus, setFilterStatus] = useState<'All' | 'Pending' | 'Approved'>('Pending'); // Default to Pending for efficiency
     const [searchQuery, setSearchQuery] = useState('');
+    const [rejectModalOpen, setRejectModalOpen] = useState(false);
+    const [requestToReject, setRequestToReject] = useState<(LeaveRequest & { users: User }) | null>(null);
     const router = useRouter();
     const supabase = createClient();
 
@@ -42,7 +45,34 @@ export default function WardenPage() {
     };
 
     const handleStatusUpdate = async (id: number, status: 'Approved' | 'Rejected') => {
+        if (status === 'Rejected') {
+            // Open rejection modal
+            const request = requests.find(r => r.id === id);
+            if (request) {
+                setRequestToReject(request);
+                setRejectModalOpen(true);
+            }
+            return;
+        }
+
+        // For approval, directly update
         await supabase.from('leave_requests').update({ status }).eq('id', id);
+        fetchRequests(); // Refresh
+    };
+
+    const handleReject = async (reason: string) => {
+        if (!requestToReject) return;
+
+        await supabase
+            .from('leave_requests')
+            .update({
+                status: 'Rejected',
+                rejection_reason: reason
+            })
+            .eq('id', requestToReject.id);
+
+        setRejectModalOpen(false);
+        setRequestToReject(null);
         fetchRequests(); // Refresh
     };
 
@@ -350,6 +380,17 @@ export default function WardenPage() {
                     )}
                 />
             </main>
+
+            {/* Rejection Modal */}
+            <RejectModal
+                isOpen={rejectModalOpen}
+                studentName={requestToReject?.users?.full_name || 'Student'}
+                onClose={() => {
+                    setRejectModalOpen(false);
+                    setRequestToReject(null);
+                }}
+                onReject={handleReject}
+            />
         </div>
     );
 }

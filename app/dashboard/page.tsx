@@ -59,7 +59,17 @@ export default function DashboardPage() {
         { header: 'Reason', accessorKey: 'reason' as const, className: 'max-w-xs truncate' },
         {
             header: 'Status',
-            cell: (item: LeaveRequest) => <StatusPill status={item.status} />
+            cell: (item: LeaveRequest) => (
+                <div>
+                    <StatusPill status={item.status} />
+                    {item.status === 'Rejected' && item.rejection_reason && (
+                        <div className="mt-2 bg-rose-50 border border-rose-200 rounded-lg p-2">
+                            <p className="text-xs text-rose-600 font-semibold uppercase tracking-wide mb-1">Rejection Reason</p>
+                            <p className="text-sm text-rose-900">{item.rejection_reason}</p>
+                        </div>
+                    )}
+                </div>
+            )
         },
     ];
 
@@ -147,6 +157,12 @@ export default function DashboardPage() {
                                     <span className="font-medium">{format(new Date(item.in_date), 'MMM d, h:mm a')}</span>
                                 </div>
                             </div>
+                            {item.status === 'Rejected' && item.rejection_reason && (
+                                <div className="mt-3 bg-rose-50 border border-rose-200 rounded-lg p-3">
+                                    <p className="text-xs text-rose-600 font-bold uppercase tracking-wide mb-1.5">❌ Rejection Reason</p>
+                                    <p className="text-sm text-rose-900 leading-relaxed">{item.rejection_reason}</p>
+                                </div>
+                            )}
                         </>
                     )}
                 />
