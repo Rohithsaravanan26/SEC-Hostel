@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase';
 import { ResponsiveTable } from '@/components/ui/ResponsiveTable';
 import { StatusPill } from '@/components/ui/StatusPill';
 import { RejectModal } from '@/components/RejectModal';
+import { Footer } from '@/components/Footer';
 import { CheckCircle, XCircle, LogOut, ShieldCheck, Search, Filter } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
@@ -391,6 +392,8 @@ export default function WardenPage() {
                 }}
                 onReject={handleReject}
             />
+
+            <Footer />
         </div>
     );
 }

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase';
 import { User } from '@/types';
 import { useRouter } from 'next/navigation';
+import { Footer } from '@/components/Footer';
 import { ArrowLeft, User as UserIcon, Phone, Mail, MapPin, Droplet, GraduationCap, Home, IdCard } from 'lucide-react';
 
 export default function ProfilePage() {
@@ -122,6 +123,8 @@ export default function ProfilePage() {
                     </div>
                 </div>
             </div>
+
+            <Footer />
         </div>
     );
 }

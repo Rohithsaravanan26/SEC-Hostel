@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase';
 import { ResponsiveTable } from '@/components/ui/ResponsiveTable';
 import { StatusPill } from '@/components/ui/StatusPill';
 import { NewRequestModal } from '@/components/NewRequestModal';
+import { Footer } from '@/components/Footer';
 import { LogOut, Plus, ArrowRight, UserCircle, LayoutDashboard } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
@@ -176,6 +177,8 @@ export default function DashboardPage() {
                 }}
                 userId={user?.id}
             />
+
+            <Footer />
         </div>
     );
 }
