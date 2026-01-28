@@ -42,7 +42,7 @@ export default function DigitalPassPage() {
         setLoading(false);
     };
 
-    const updateTime = async (field: 'actual_out_time' | 'actual_in_time') => {
+    const updateTime = async (field: 'actual_out_time') => {
         if (!id || !request) return;
 
         // CRITICAL SECURITY: Verify status is Approved
@@ -73,28 +73,6 @@ export default function DigitalPassPage() {
             // Prevent late check-out (after scheduled return date)
             if (now > inDate) {
                 alert('Cannot check out after scheduled return time. Please contact warden.');
-                return;
-            }
-        }
-
-        // CRITICAL: Validate check-in time
-        if (field === 'actual_in_time') {
-            // Must check out first
-            if (!request.actual_out_time) {
-                alert('Must check out before checking in');
-                return;
-            }
-
-            // Prevent double punch
-            if (request.actual_in_time) {
-                alert('Already checked in at ' + format(new Date(request.actual_in_time), 'MMM d, h:mm a'));
-                return;
-            }
-
-            // Must check in after check-out
-            const checkOutTime = new Date(request.actual_out_time);
-            if (now < checkOutTime) {
-                alert('Cannot check in before check-out time');
                 return;
             }
         }
@@ -218,14 +196,7 @@ export default function DigitalPassPage() {
                                 </div>
                             )}
 
-                            {request.actual_out_time && !request.actual_in_time && (
-                                <button
-                                    onClick={() => updateTime('actual_in_time')}
-                                    className="w-full py-4 bg-emerald-600 text-white rounded-xl font-bold text-lg shadow-lg hover:bg-emerald-700 active:scale-95 transition-all flex items-center justify-center gap-2"
-                                >
-                                    <ArrowLeft className="w-5 h-5" /> CHECK IN
-                                </button>
-                            )}
+                            {/* Check In button removed as per requirement */}
 
                             {request.actual_in_time && (
                                 <div className="bg-gradient-to-r from-slate-100 to-slate-200 border-2 border-slate-300 p-4 rounded-xl">
