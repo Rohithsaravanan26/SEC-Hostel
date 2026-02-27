@@ -163,10 +163,13 @@ export const uploadProfilePhoto = async (file: File, userId: string): Promise<st
 
         const publicUrl = publicUrlData.publicUrl;
 
-        // Update the user's profile_pic_url in the database
+        // Update the user's profile_pic_url and set status to pending in the database
         const { error: updateError } = await supabase
             .from('users')
-            .update({ profile_pic_url: publicUrl })
+            .update({
+                profile_pic_url: publicUrl,
+                photo_status: 'pending'
+            })
             .eq('id', userId);
 
         if (updateError) {

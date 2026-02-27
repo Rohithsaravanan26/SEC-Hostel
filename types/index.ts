@@ -19,6 +19,7 @@ export interface User {
   year: string | null;
   floor_incharge: string | null;
   profile_pic_url?: string | null;
+  photo_status?: 'pending' | 'approved' | 'rejected' | null;
   created_at: string;
 }
 

@@ -6,7 +6,7 @@ import { uploadProfilePhoto } from '@/lib/storage';
 import { User } from '@/types';
 import { useRouter } from 'next/navigation';
 import { Footer } from '@/components/Footer';
-import { ArrowLeft, User as UserIcon, Phone, MapPin, Droplet, GraduationCap, Home, IdCard, Camera, Loader2, Fingerprint, Building2, Calendar } from 'lucide-react';
+import { ArrowLeft, User as UserIcon, Phone, MapPin, Droplet, GraduationCap, Home, IdCard, Camera, Loader2, Fingerprint, Building2, Calendar, CheckCircle, XCircle, Clock } from 'lucide-react';
 
 export default function ProfilePage() {
     const [user, setUser] = useState<User | null>(null);
@@ -51,7 +51,7 @@ export default function ProfilePage() {
 
         try {
             const publicUrl = await uploadProfilePhoto(file, user.id);
-            setUser({ ...user, profile_pic_url: publicUrl });
+            setUser({ ...user, profile_pic_url: publicUrl, photo_status: 'pending' });
         } catch (err: any) {
             setUploadError(err.message || 'Failed to upload photo');
         } finally {
@@ -76,6 +76,7 @@ export default function ProfilePage() {
     }
 
     const hasPhoto = !!user.profile_pic_url;
+    const canUpload = !hasPhoto || user.photo_status === 'rejected';
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50 to-slate-50">
@@ -93,22 +94,37 @@ export default function ProfilePage() {
                         {/* Profile Photo or Upload Prompt */}
                         <div className="relative group">
                             {hasPhoto ? (
-                                <img
-                                    src={user.profile_pic_url!}
-                                    alt={user.full_name}
-                                    className="h-20 w-20 rounded-full object-cover border-2 border-white/30"
-                                />
+                                <div className="relative">
+                                    <img
+                                        src={user.profile_pic_url!}
+                                        alt={user.full_name}
+                                        className={`h-20 w-20 rounded-full object-cover border-2 ${user.photo_status === 'rejected' ? 'border-rose-400 opacity-80' :
+                                                user.photo_status === 'pending' ? 'border-amber-400' :
+                                                    'border-emerald-400'
+                                            }`}
+                                    />
+                                    {/* Overlay for re-upload if rejected */}
+                                    {user.photo_status === 'rejected' && (
+                                        <div
+                                            onClick={() => fileInputRef.current?.click()}
+                                            className="absolute inset-0 bg-black/50 rounded-full flex flex-col items-center justify-center cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity"
+                                        >
+                                            <Camera className="w-5 h-5 text-white" />
+                                            <span className="text-[10px] text-white font-medium mt-0.5">Retake</span>
+                                        </div>
+                                    )}
+                                </div>
                             ) : (
                                 <div
                                     onClick={() => fileInputRef.current?.click()}
                                     className="h-20 w-20 rounded-full bg-white/20 backdrop-blur-sm flex flex-col items-center justify-center cursor-pointer hover:bg-white/30 transition-colors border-2 border-dashed border-white/40"
                                 >
                                     {uploading ? (
-                                        <Loader2 className="w-6 h-6 animate-spin" />
+                                        <Loader2 className="w-6 h-6 animate-spin text-white" />
                                     ) : (
                                         <>
-                                            <Camera className="w-5 h-5 mb-0.5" />
-                                            <span className="text-[10px] font-medium">Upload</span>
+                                            <Camera className="w-5 h-5 text-white mb-0.5" />
+                                            <span className="text-[10px] text-white font-medium">Upload</span>
                                         </>
                                     )}
                                 </div>
@@ -120,7 +136,7 @@ export default function ProfilePage() {
                                 title="Upload profile photo"
                                 className="hidden"
                                 onChange={handlePhotoUpload}
-                                disabled={uploading}
+                                disabled={uploading || !canUpload}
                             />
                         </div>
                         <div>
@@ -128,14 +144,34 @@ export default function ProfilePage() {
                             <p className="text-indigo-100 mt-1">{user.register_number}</p>
                         </div>
                     </div>
+
+                    {/* Status Messages */}
                     {uploadError && (
-                        <div className="mt-3 bg-red-500/20 border border-red-400/30 rounded-lg px-3 py-2 text-sm">
+                        <div className="mt-4 bg-red-500/20 border border-red-400/30 rounded-lg px-3 py-2 text-sm text-white max-w-lg">
                             {uploadError}
                         </div>
                     )}
+                    {hasPhoto && user.photo_status === 'rejected' && (
+                        <div className="mt-4 bg-rose-500/20 border border-rose-400/30 rounded-lg px-3 py-2.5 text-sm flex items-start gap-2 max-w-lg">
+                            <XCircle className="w-5 h-5 shrink-0 text-rose-200" />
+                            <span className="text-rose-50">Your previous photo was rejected by the warden. Please click your photo to upload a clear one.</span>
+                        </div>
+                    )}
+                    {hasPhoto && user.photo_status === 'pending' && (
+                        <div className="mt-4 bg-amber-500/20 border border-amber-400/30 rounded-lg px-3 py-2.5 text-sm flex items-start gap-2 max-w-lg">
+                            <Clock className="w-5 h-5 shrink-0 text-amber-200" />
+                            <span className="text-amber-50">Your photo is pending warden approval.</span>
+                        </div>
+                    )}
+                    {hasPhoto && user.photo_status === 'approved' && (
+                        <div className="mt-4 bg-emerald-500/20 border border-emerald-400/30 rounded-lg px-3 py-2 text-sm flex items-center gap-2 max-w-lg">
+                            <CheckCircle className="w-4 h-4 text-emerald-200" />
+                            <span className="text-emerald-50">Profile photo approved.</span>
+                        </div>
+                    )}
                     {!hasPhoto && !uploading && (
-                        <div className="mt-3 bg-amber-500/20 border border-amber-400/30 rounded-lg px-3 py-2 text-sm flex items-center gap-2">
-                            <Camera className="w-4 h-4" />
+                        <div className="mt-4 bg-white/10 border border-white/20 rounded-lg px-3 py-2.5 text-sm flex items-center gap-2 max-w-lg text-white font-medium">
+                            <Camera className="w-5 h-5 text-indigo-200" />
                             Please upload your profile photo (one-time only)
                         </div>
                     )}
