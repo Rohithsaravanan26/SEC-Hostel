@@ -14,6 +14,10 @@ export interface User {
   parent_mobile: string | null;
   blood_group: string | null;
   address: string | null;
+  bio_metric_number: string | null;
+  department: string | null;
+  year: string | null;
+  floor_incharge: string | null;
   profile_pic_url?: string | null;
   created_at: string;
 }

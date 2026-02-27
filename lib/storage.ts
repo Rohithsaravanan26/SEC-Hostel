@@ -99,3 +99,83 @@ export const uploadFile = async (file: File): Promise<string | null> => {
         throw error;
     }
 };
+
+// ─── Profile Photo Upload ──────────────────────────────────────────────
+
+const PHOTO_MAX_SIZE = 2 * 1024 * 1024; // 2MB
+const PHOTO_ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png'];
+const PHOTO_ALLOWED_EXTS = ['jpg', 'jpeg', 'png'];
+
+export const uploadProfilePhoto = async (file: File, userId: string): Promise<string> => {
+    try {
+        // Validate file size
+        if (file.size > PHOTO_MAX_SIZE) {
+            throw new Error('Profile photo must be under 2MB');
+        }
+
+        // Validate MIME type
+        if (!PHOTO_ALLOWED_TYPES.includes(file.type)) {
+            throw new Error('Only JPG and PNG photos are allowed');
+        }
+
+        // Validate extension
+        const fileExt = file.name.split('.').pop()?.toLowerCase();
+        if (!fileExt || !PHOTO_ALLOWED_EXTS.includes(fileExt)) {
+            throw new Error('Invalid file extension. Only .jpg and .png are allowed.');
+        }
+
+        // Validate magic bytes
+        const buffer = await file.arrayBuffer();
+        const bytes = new Uint8Array(buffer);
+
+        if (fileExt === 'jpg' || fileExt === 'jpeg') {
+            if (!(bytes[0] === 0xFF && bytes[1] === 0xD8 && bytes[2] === 0xFF)) {
+                throw new Error('File content does not match JPEG format.');
+            }
+        }
+        if (fileExt === 'png') {
+            if (!(bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4E && bytes[3] === 0x47)) {
+                throw new Error('File content does not match PNG format.');
+            }
+        }
+
+        const supabase = createClient();
+
+        // Use userId as filename for easy lookup and overwrite prevention
+        const fileName = `${userId}.${fileExt}`;
+
+        const { data, error } = await supabase.storage
+            .from('profile_pics')
+            .upload(fileName, file, {
+                cacheControl: '3600',
+                upsert: true, // Allow overwrite for the same user
+                contentType: file.type
+            });
+
+        if (error) {
+            throw new Error(`Upload failed: ${error.message}`);
+        }
+
+        // Get public URL
+        const { data: publicUrlData } = supabase.storage
+            .from('profile_pics')
+            .getPublicUrl(fileName);
+
+        const publicUrl = publicUrlData.publicUrl;
+
+        // Update the user's profile_pic_url in the database
+        const { error: updateError } = await supabase
+            .from('users')
+            .update({ profile_pic_url: publicUrl })
+            .eq('id', userId);
+
+        if (updateError) {
+            console.error('Failed to update profile_pic_url:', updateError);
+        }
+
+        return publicUrl;
+    } catch (error: any) {
+        console.error('uploadProfilePhoto error:', error);
+        throw error;
+    }
+};

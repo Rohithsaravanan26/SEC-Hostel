@@ -7,15 +7,25 @@ CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
     -- Insert a new row in public.users for every new auth.users row
-    INSERT INTO public.users (id, register_number, full_name, role, hostel_block, room_number, parent_mobile)
+    INSERT INTO public.users (
+        id, register_number, full_name, role, hostel_block, room_number, 
+        parent_mobile, student_mobile, bio_metric_number, department, year, 
+        floor_incharge, course
+    )
     VALUES (
         NEW.id,
-        NULL, -- Register number can be updated later
-        COALESCE(NEW.raw_user_meta_data->>'full_name', 'New User'), -- Get from signup metadata if provided
-        COALESCE(NEW.raw_user_meta_data->>'role', 'student'), -- Default to student
-        NULL, -- Hostel block can be updated later
-        NULL, -- Room number can be updated later
-        NEW.raw_user_meta_data->>'parent_mobile' -- Get from signup metadata if provided
+        COALESCE(NEW.raw_user_meta_data->>'register_number', NULL),
+        COALESCE(NEW.raw_user_meta_data->>'full_name', 'New User'),
+        COALESCE(NEW.raw_user_meta_data->>'role', 'student'),
+        COALESCE(NEW.raw_user_meta_data->>'hostel_block', NULL),
+        COALESCE(NEW.raw_user_meta_data->>'room_number', NULL),
+        COALESCE(NEW.raw_user_meta_data->>'parent_mobile', NULL),
+        COALESCE(NEW.raw_user_meta_data->>'student_mobile', NULL),
+        COALESCE(NEW.raw_user_meta_data->>'bio_metric_number', NULL),
+        COALESCE(NEW.raw_user_meta_data->>'department', NULL),
+        COALESCE(NEW.raw_user_meta_data->>'year', NULL),
+        COALESCE(NEW.raw_user_meta_data->>'floor_incharge', NULL),
+        COALESCE(NEW.raw_user_meta_data->>'course', NULL)
     );
     RETURN NEW;
 END;

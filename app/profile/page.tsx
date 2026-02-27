@@ -1,15 +1,19 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { createClient } from '@/lib/supabase';
+import { uploadProfilePhoto } from '@/lib/storage';
 import { User } from '@/types';
 import { useRouter } from 'next/navigation';
 import { Footer } from '@/components/Footer';
-import { ArrowLeft, User as UserIcon, Phone, Mail, MapPin, Droplet, GraduationCap, Home, IdCard } from 'lucide-react';
+import { ArrowLeft, User as UserIcon, Phone, MapPin, Droplet, GraduationCap, Home, IdCard, Camera, Loader2, Fingerprint, Building2, Calendar } from 'lucide-react';
 
 export default function ProfilePage() {
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
+    const [uploading, setUploading] = useState(false);
+    const [uploadError, setUploadError] = useState<string | null>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
     const router = useRouter();
     const supabase = createClient();
 
@@ -38,6 +42,23 @@ export default function ProfilePage() {
         setLoading(false);
     };
 
+    const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file || !user) return;
+
+        setUploading(true);
+        setUploadError(null);
+
+        try {
+            const publicUrl = await uploadProfilePhoto(file, user.id);
+            setUser({ ...user, profile_pic_url: publicUrl });
+        } catch (err: any) {
+            setUploadError(err.message || 'Failed to upload photo');
+        } finally {
+            setUploading(false);
+        }
+    };
+
     if (loading) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-slate-50">
@@ -54,6 +75,8 @@ export default function ProfilePage() {
         );
     }
 
+    const hasPhoto = !!user.profile_pic_url;
+
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50 to-slate-50">
             {/* Header */}
@@ -67,14 +90,55 @@ export default function ProfilePage() {
                         Back
                     </button>
                     <div className="flex items-center gap-4">
-                        <div className="h-20 w-20 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-3xl font-bold">
-                            {user.full_name.charAt(0)}
+                        {/* Profile Photo or Upload Prompt */}
+                        <div className="relative group">
+                            {hasPhoto ? (
+                                <img
+                                    src={user.profile_pic_url!}
+                                    alt={user.full_name}
+                                    className="h-20 w-20 rounded-full object-cover border-2 border-white/30"
+                                />
+                            ) : (
+                                <div
+                                    onClick={() => fileInputRef.current?.click()}
+                                    className="h-20 w-20 rounded-full bg-white/20 backdrop-blur-sm flex flex-col items-center justify-center cursor-pointer hover:bg-white/30 transition-colors border-2 border-dashed border-white/40"
+                                >
+                                    {uploading ? (
+                                        <Loader2 className="w-6 h-6 animate-spin" />
+                                    ) : (
+                                        <>
+                                            <Camera className="w-5 h-5 mb-0.5" />
+                                            <span className="text-[10px] font-medium">Upload</span>
+                                        </>
+                                    )}
+                                </div>
+                            )}
+                            <input
+                                ref={fileInputRef}
+                                type="file"
+                                accept="image/jpeg,image/png"
+                                title="Upload profile photo"
+                                className="hidden"
+                                onChange={handlePhotoUpload}
+                                disabled={uploading}
+                            />
                         </div>
                         <div>
                             <h1 className="text-2xl sm:text-3xl font-bold">{user.full_name}</h1>
                             <p className="text-indigo-100 mt-1">{user.register_number}</p>
                         </div>
                     </div>
+                    {uploadError && (
+                        <div className="mt-3 bg-red-500/20 border border-red-400/30 rounded-lg px-3 py-2 text-sm">
+                            {uploadError}
+                        </div>
+                    )}
+                    {!hasPhoto && !uploading && (
+                        <div className="mt-3 bg-amber-500/20 border border-amber-400/30 rounded-lg px-3 py-2 text-sm flex items-center gap-2">
+                            <Camera className="w-4 h-4" />
+                            Please upload your profile photo (one-time only)
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -90,9 +154,11 @@ export default function ProfilePage() {
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <ProfileField icon={<IdCard />} label="Register Number" value={user.register_number} />
-                            <ProfileField icon={<GraduationCap />} label="Course" value={user.course || 'Not specified'} />
+                            <ProfileField icon={<Building2 />} label="Department" value={user.department || user.course || 'Not specified'} />
+                            <ProfileField icon={<Calendar />} label="Year" value={user.year || 'Not specified'} />
                             <ProfileField icon={<Phone />} label="Student Mobile" value={user.student_mobile || 'Not specified'} isPhone />
                             <ProfileField icon={<Droplet />} label="Blood Group" value={user.blood_group || 'Not specified'} />
+                            <ProfileField icon={<Fingerprint />} label="Bio-Metric Number" value={user.bio_metric_number || 'Not specified'} />
                         </div>
                     </div>
 
@@ -106,6 +172,9 @@ export default function ProfilePage() {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <ProfileField label="Hostel Block" value={user.hostel_block || 'Not assigned'} />
                             <ProfileField label="Room Number" value={user.room_number || 'Not assigned'} />
+                            {user.floor_incharge && (
+                                <ProfileField label="Floor Incharge" value={user.floor_incharge} />
+                            )}
                         </div>
                     </div>
 

@@ -14,7 +14,8 @@ import { LeaveRequest } from '@/types';
 export default function DashboardPage() {
     const [requests, setRequests] = useState<LeaveRequest[]>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [user, setUser] = useState<any>(null); // Quick MVP user state
+    const [user, setUser] = useState<any>(null);
+    const [profile, setProfile] = useState<any>(null);
     const router = useRouter();
     const supabase = createClient();
 
@@ -28,6 +29,14 @@ export default function DashboardPage() {
             }
             setUser(user);
             fetchRequests(user.id);
+
+            // Fetch full profile
+            const { data: profileData } = await supabase
+                .from('users')
+                .select('*')
+                .eq('id', user.id)
+                .single();
+            if (profileData) setProfile(profileData);
         };
         checkUser();
     }, [router, supabase]);
@@ -88,14 +97,22 @@ export default function DashboardPage() {
                         </div>
                         <div className="flex items-center gap-4">
                             <div className="hidden sm:flex flex-col items-end mr-2">
-                                <p className="font-semibold text-sm text-slate-900">{user?.user_metadata?.full_name || user?.email}</p>
+                                <p className="font-semibold text-sm text-slate-900">{profile?.full_name || user?.user_metadata?.full_name || user?.email}</p>
                                 <p className="text-xs text-slate-500 font-medium">
-                                    Parent: {user?.user_metadata?.parent_mobile || '+91 98765 43210'}
+                                    {profile?.department || 'Student'}
                                 </p>
                             </div>
-                            <div className="h-9 w-9 bg-indigo-100 rounded-full flex items-center justify-center border border-indigo-200 text-indigo-700 font-bold">
-                                {user?.email?.charAt(0).toUpperCase()}
-                            </div>
+                            {profile?.profile_pic_url ? (
+                                <img
+                                    src={profile.profile_pic_url}
+                                    alt={profile.full_name}
+                                    className="h-9 w-9 rounded-full object-cover border border-indigo-200"
+                                />
+                            ) : (
+                                <div className="h-9 w-9 bg-indigo-100 rounded-full flex items-center justify-center border border-indigo-200 text-indigo-700 font-bold">
+                                    {(profile?.full_name || user?.email || '?').charAt(0).toUpperCase()}
+                                </div>
+                            )}
                             <button
                                 onClick={() => router.push('/profile')}
                                 className="p-2 text-slate-400 hover:text-slate-600 transition-colors"
